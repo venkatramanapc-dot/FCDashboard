@@ -19,6 +19,24 @@ symbols = {
     "MIDCAP50": "^NSEMDCP50"
 }
 
+
+def strength_icon(move):
+
+    move = abs(move)
+
+    if move >= 0.20:
+        return "🔥"
+
+    elif move >= 0.10:
+        return "💪"
+
+    elif move >= 0.05:
+        return "🟡"
+
+    else:
+        return "⚪"
+
+
 bull_now = 0
 bear_now = 0
 
@@ -27,6 +45,8 @@ continuation_bear = 0
 
 reversal_bull = 0
 reversal_bear = 0
+
+fc_score = 0
 
 strengths = {}
 
@@ -54,15 +74,31 @@ for name, symbol in symbols.items():
     prev_color = "🟢" if prev_close > prev_open else "🔴"
     curr_color = "🟢" if curr_close > curr_open else "🔴"
 
-    pct = ((curr_close - curr_open) / curr_open) * 100
+    # Previous candle force
+    prev_pct = ((prev_close - prev_open) / prev_open) * 100
 
-    strengths[name] = pct
+    # Live candle movement
+    curr_pct = ((curr_close - curr_open) / curr_open) * 100
 
-    if pct > 0:
+    strengths[name] = prev_pct
+
+    # FC Score based on previous candle force
+    force = abs(prev_pct)
+
+    if force >= 0.20:
+        fc_score += 3
+    elif force >= 0.10:
+        fc_score += 2
+    elif force >= 0.05:
+        fc_score += 1
+
+    # Current candle direction counts
+    if curr_pct > 0:
         bull_now += 1
-    elif pct < 0:
+    elif curr_pct < 0:
         bear_now += 1
 
+    # Sync calculations
     if prev_color == "🟢" and curr_color == "🟢":
         continuation_bull += 1
 
@@ -76,7 +112,15 @@ for name, symbol in symbols.items():
         reversal_bear += 1
 
     st.markdown(
-        f"### {name}   {prev_color} → {curr_color}   ({pct:+.2f}%)"
+        f"### {name}  {prev_color} → {curr_color}"
+    )
+
+    st.write(
+        f"💪 Force: {prev_pct:+.2f}% {strength_icon(prev_pct)}"
+    )
+
+    st.write(
+        f"📈 Live: {curr_pct:+.2f}%"
     )
 
 st.divider()
@@ -110,6 +154,19 @@ st.subheader(
     f"Leader: {leader} ({strengths[leader]:+.2f}%)"
 )
 
+st.subheader(
+    f"FC Score: {fc_score}/12"
+)
+
+if fc_score >= 8:
+    st.success("🟢 STRONG FC")
+
+elif fc_score >= 5:
+    st.warning("🟡 MODERATE FC")
+
+else:
+    st.error("🔴 WEAK FC")
+
 st.caption(
-    "Previous Candle → Current Candle | Current candle % movement"
+    "Force = Previous Candle % Movement | Live = Current Candle % Movement"
 )
