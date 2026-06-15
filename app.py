@@ -170,3 +170,24 @@ else:
 st.caption(
     "Force = Previous Candle % Movement | Live = Current Candle % Movement"
 )
+import requests
+
+BOT_TOKEN = "8679603347:AAG2aWK6d8vrgrEjpnJ08_BX1v9Q9ZKYs6c"
+CHAT_ID = "8851923121"
+
+def send_telegram_alert(message):
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": message
+    }
+
+    requests.post(url, data=payload)
+
+
+if st.button("Send Test Alert"):
+    send_telegram_alert(
+        "🎯 TEST ALERT\nLCC Engine Connected"
+    )
