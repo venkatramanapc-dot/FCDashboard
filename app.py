@@ -191,3 +191,109 @@ if st.button("Send Test Alert"):
     send_telegram_alert(
         "🎯 TEST ALERT\nLCC Engine Connected"
     )
+    st.success("Alert Sent")
+    import requests
+
+# ==========================
+# TELEGRAM SETTINGS
+# ==========================
+
+BOT_TOKEN = "8679603347:AAG2aWK6d8vrgrEjpnJ08_BX1v9Q9ZKYs6c"
+CHAT_ID = "8851923121"
+
+def send_telegram_alert(message):
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": message
+    }
+
+    requests.post(url, data=payload)
+
+
+# ==========================
+# ALERT MEMORY
+# ==========================
+
+if "lcc_alert_sent" not in st.session_state:
+    st.session_state.lcc_alert_sent = False
+
+
+# ==========================
+# LCC CONDITIONS
+# ==========================
+
+leader_force = abs(strengths[leader])
+
+lcc_signal = (
+    fc_score > 6
+    and (
+        continuation_bull >= 3
+        or continuation_bear >= 3
+    )
+    and leader_force >= 0.10
+)
+
+# ==========================
+# TELEGRAM ALERT
+# ==========================
+
+if lcc_signal and not st.session_state.lcc_alert_sent:
+
+    if continuation_bull >= 3:
+
+        send_telegram_alert(
+            f"""
+🎯 LCC LONG READY
+
+FC Score: {fc_score}/12
+Leader: {leader}
+Force: {strengths[leader]:+.2f}%
+Bull Sync: {continuation_bull}/4
+"""
+        )
+
+    elif continuation_bear >= 3:
+
+        send_telegram_alert(
+            f"""
+🎯 LCC SHORT READY
+
+FC Score: {fc_score}/12
+Leader: {leader}
+Force: {strengths[leader]:+.2f}%
+Bear Sync: {continuation_bear}/4
+"""
+        )
+
+    st.session_state.lcc_alert_sent = True
+
+    st.success("🎯 Telegram Alert Sent")
+
+# ==========================
+# RESET
+# ==========================
+
+if not lcc_signal:
+
+    st.session_state.lcc_alert_sent = False
+
+    st.info("Waiting for next LCC setup")
+    st.subheader("LCC Status")
+
+if fc_score <= 6:
+    st.warning("❌ FC below threshold")
+
+elif abs(strengths[leader]) < 0.10:
+    st.warning("❌ Leader not strong enough")
+
+elif continuation_bull >= 3:
+    st.success("🟢 LCC LONG READY")
+
+elif continuation_bear >= 3:
+    st.success("🔴 LCC SHORT READY")
+
+else:
+    st.info("⏳ Waiting for continuation sync")
