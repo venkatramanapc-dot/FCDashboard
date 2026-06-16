@@ -299,7 +299,43 @@ if st.button("Send Test Alert"):
 if "lcc_alert_sent" not in st.session_state:
 
     st.session_state.lcc_alert_sent = False
+    if "last_lcc_alert" not in st.session_state:
+     st.session_state.last_lcc_alert = 0
+# ==========================
+# LCC LEVEL ALERTS
+# ==========================
 
+if basket_strength >= 4 and st.session_state.last_lcc_alert < 4:
+
+    send_telegram_alert(
+        f"🟡 LCC = 4\n\nLeader: {leader}\nForce: {strengths[leader]:+.2f}%"
+    )
+
+    st.session_state.last_lcc_alert = 4
+
+if basket_strength >= 5 and st.session_state.last_lcc_alert < 5:
+
+    send_telegram_alert(
+        f"🟠 LCC = 5\n\nLeader: {leader}\nForce: {strengths[leader]:+.2f}%"
+    )
+
+    st.session_state.last_lcc_alert = 5
+
+if basket_strength >= 6 and st.session_state.last_lcc_alert < 6:
+
+    send_telegram_alert(
+        f"🟢 LCC = 6\n\nLeader: {leader}\nForce: {strengths[leader]:+.2f}%"
+    )
+
+    st.session_state.last_lcc_alert = 6
+
+if basket_strength >= 7 and st.session_state.last_lcc_alert < 7:
+
+    send_telegram_alert(
+        f"🔥 LCC = 7\n\nLeader: {leader}\nForce: {strengths[leader]:+.2f}%"
+    )
+
+    st.session_state.last_lcc_alert = 7
 # ==========================
 # LCC SIGNAL LOGIC
 # ==========================
