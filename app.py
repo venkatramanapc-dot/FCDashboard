@@ -293,8 +293,22 @@ if st.button("Send Test Alert"):
 # ==========================
 
 if "lcc_alert_sent" not in st.session_state:
-
     st.session_state.lcc_alert_sent = False
+
+if "session_high_strength" not in st.session_state:
+    st.session_state.session_high_strength = 0
+
+if "last_alert_time" not in st.session_state:
+    st.session_state.last_alert_time = "None"
+
+if "last_alert_type" not in st.session_state:
+    st.session_state.last_alert_type = "None"
+
+# Track highest Basket Strength reached
+st.session_state.session_high_strength = max(
+    st.session_state.session_high_strength,
+    basket_strength
+)
 
 # ==========================
 # LCC SIGNAL LOGIC
@@ -339,6 +353,8 @@ Bull Continuation Sync: {continuation_bull}/3
 """
         )
 
+        st.session_state.last_alert_type = "LCC LONG"
+
     elif continuation_bear == 3:
 
         send_telegram_alert(
@@ -355,20 +371,91 @@ Bear Continuation Sync: {continuation_bear}/3
 """
         )
 
+        st.session_state.last_alert_type = "LCC SHORT"
+
     st.session_state.lcc_alert_sent = True
 
-    st.success(
-        "🎯 Telegram Alert Sent"
+    st.session_state.last_alert_time = (
+        datetime.now().strftime("%H:%M:%S")
     )
+
+    st.success("🎯 Telegram Alert Sent")
 
 # ==========================
 # RESET ALERT
 # ==========================
 
 if not lcc_signal:
-
     st.session_state.lcc_alert_sent = False
-st.info("⏳ Waiting for next LCC setup")
+
+# ==========================
+# ALERT MONITOR
+# ==========================
+
+st.divider()
+
+st.subheader("🚨 Alert Monitor")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.metric(
+        "Current Strength",
+        basket_strength
+    )
+
+with col2:
+    st.metric(
+        "Today's High",
+        st.session_state.session_high_strength
+    )
+
+st.write(
+    f"**LCC Signal Active:** {'✅ Yes' if lcc_signal else '❌ No'}"
+)
+
+st.write(
+    f"**Alert Sent:** {'✅ Yes' if st.session_state.lcc_alert_sent else '❌ No'}"
+)
+
+st.write(
+    f"**Last Alert Time:** {st.session_state.last_alert_time}"
+)
+
+st.write(
+    f"**Last Alert Type:** {st.session_state.last_alert_type}"
+)
+
+# Diagnostic Details
+
+st.markdown("### Diagnostics")
+
+st.write(f"Basket Strength: {basket_strength}/9")
+st.write(f"Leader Force: {leader_force:.2f}%")
+
+st.write(
+    f"Continuation Bull: {continuation_bull}/3"
+)
+
+st.write(
+    f"Continuation Bear: {continuation_bear}/3"
+)
+
+st.write(
+    f"Strength >= 6: {'✅' if basket_strength >= 6 else '❌'}"
+)
+
+st.write(
+    f"Leader >= 0.10%: {'✅' if leader_force >= 0.10 else '❌'}"
+)
+
+st.write(
+    f"Bull Sync 3/3: {'✅' if continuation_bull == 3 else '❌'}"
+)
+
+st.write(
+    f"Bear Sync 3/3: {'✅' if continuation_bear == 3 else '❌'}"
+)
 # ==========================
 # LCC STATUS PANEL
 # ==========================
